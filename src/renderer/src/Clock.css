@@ -1,0 +1,492 @@
+/* ─── Clock shell ──────────────────────────────────────────────── */
+.clock {
+  --t: 2000ms ease-in-out;
+  --t-hover: 500ms ease-out;
+  position: relative;
+  width: 369px;
+  height: 145px;
+  overflow: hidden;
+  border-radius: 200px;
+  cursor: default;
+  /* Outer shadow only — inset shadows live on .clock__inset-shadow overlay */
+  box-shadow:
+    0 -3px 4px 0 rgba(0, 0, 0, 0.25),
+    0  4px 4px 0 rgba(255, 255, 255, 0.63);
+}
+
+/* ─── Background crossfade layers ─────────────────────────────── */
+.clock__bg {
+  position: absolute;
+  inset: 0;
+  border-radius: 200px;
+  pointer-events: none;
+  transition: opacity var(--t);
+}
+.clock__bg--sunrise { background: linear-gradient(0deg, #ffca43 0.07%, #eb9c35 99.93%); }
+.clock__bg--day     { background: linear-gradient(180deg, #43aaff 0%, #4e9ad9 100%); }
+.clock__bg--sunset  { background: linear-gradient(0deg, #ffca43 0.07%, #eb9c35 99.93%); }
+.clock__bg--night   { background: #011223; }
+
+/* ─── Cloud layers ─────────────────────────────────────────────── */
+/*
+  ONE element per layer (front/back). Same SVG path for every state;
+  only the position changes. The SVG dimensions and 11.4° rotation are
+  fixed on each element. CSS transitions animate left/top between states.
+
+  Position derivation: from Figma outer-container + flex-center centering.
+    inner_left = outer_left + (outer_w − inner_w) / 2
+    inner_top  = outer_top  + (outer_h − inner_h) / 2
+
+  Sunrise default: clouds nearly off-screen below the 145 px clock →
+  only the very top of the large cloud bump peeks in. This is intentional.
+*/
+.clock__cloud {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  transition: left var(--t), top var(--t);
+}
+
+/* Front cloud — 375.781 × 198.277, rotated 11.4° */
+.clock__cloud--front {
+  width: 375.781px;
+  height: 198.277px;
+  transform: rotate(11.4deg);
+  transform-origin: center;
+  /* sunrise (default): inner_left=-22.15, inner_top=189.20 → mostly off-screen */
+  left: -22.15px;
+  top: 189.20px;
+}
+.clock--day    .clock__cloud--front { left: -27.94px; top:  97.62px; }
+.clock--sunset .clock__cloud--front { left:  18.45px; top:  75.26px; }
+.clock--night  .clock__cloud--front { left:  51.42px; top:  75.56px; }
+
+/* Back cloud — 360.669 × 185.913, rotated 11.4° */
+.clock__cloud--back {
+  width: 360.669px;
+  height: 185.913px;
+  transform: rotate(11.4deg);
+  transform-origin: center;
+  /* sunrise (default): mostly off-screen */
+  left: -17.33px;
+  top: 188.64px;
+}
+.clock--day    .clock__cloud--back { left: -23.12px; top:  97.06px; }
+.clock--sunset .clock__cloud--back { left:  25.59px; top:  74.93px; }
+.clock--night  .clock__cloud--back { left:  58.13px; top:  75.19px; }
+
+/* ─── Stars — z-index 2, sits above clouds but below text ──────── */
+.clock__stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 2;
+  transition: opacity var(--t), transform var(--t-hover);
+  transform-origin: 40% 50%;
+}
+.clock--night .clock__stars {
+  opacity: 1;
+}
+/* Hover: stars rotate gently */
+.clock:hover .clock__stars {
+  transform: rotate(8deg) scale(1.04);
+}
+
+/* ─── Celestial group: rays + pill move together ───────────────── */
+.clock__celestial-group {
+  position: absolute;
+  width: 99px;
+  height: 100px;
+  z-index: 3;
+  left: 235px;
+  top: 95px;           /* default = sunrise, sun partially below */
+  transition: left var(--t), top var(--t), transform var(--t-hover);
+}
+.clock--day    .clock__celestial-group { left: 235px; top: 25px; }
+.clock--sunset .clock__celestial-group { left: 19px;  top: 25px; }
+.clock--night  .clock__celestial-group { left: 235px; top: 17px; }
+/* Hover: sun/moon + rings lift */
+.clock:hover .clock__celestial-group {
+  transform: translateY(-5px);
+}
+
+/* ─── Rays: concentric ring halos around the moon/sun ───────────── */
+/*
+  Each ring uses a three-stop radial gradient:
+    transparent (inner void, covered by pill) →
+    peak opacity at the ring circumference →
+    transparent (outer fade-out)
+
+  The moon/sun pill (≈ 99×100 px) occupies the centre; the rings are
+  only visible in the annular region outside the pill. Stop positions are
+  calculated relative to each element's own radius so the bright band
+  always sits just outside the pill edge.
+
+  Rendered largest→smallest in the DOM so inner rings paint on top.
+*/
+.clock__rays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.clock__ray {
+  position: absolute;
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Ray 1 — r = 76 px  |  pill edge ≈ 65 % → ring peaks at 72 % */
+.clock__ray--1 {
+  width: 152px;
+  height: 152px;
+  background: radial-gradient(circle,
+    transparent          62%,
+    rgba(255,255,255,0.22) 72%,
+    transparent          86%
+  );
+}
+
+/* Ray 2 — r = 101.5 px  |  pill edge ≈ 49 % → ring peaks at 60 % */
+.clock__ray--2 {
+  width: 203px;
+  height: 203px;
+  background: radial-gradient(circle,
+    transparent          47%,
+    rgba(255,255,255,0.15) 60%,
+    transparent          75%
+  );
+}
+
+/* Ray 3 — r = 128.5 px  |  pill edge ≈ 39 % → ring peaks at 50 % */
+.clock__ray--3 {
+  width: 257px;
+  height: 257px;
+  background: radial-gradient(circle,
+    transparent          37%,
+    rgba(255,255,255,0.10) 50%,
+    transparent          65%
+  );
+}
+
+/* ─── Pill container ────────────────────────────────────────────── */
+.clock__pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 200px;
+  overflow: hidden;
+}
+
+/* ─── Sun face ──────────────────────────────────────────────────── */
+.clock__sun-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity var(--t);
+}
+.clock--night .clock__sun-face {
+  opacity: 0;
+}
+
+/* ─── Moon face ─────────────────────────────────────────────────── */
+.clock__moon-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 200px;
+  background: #d9d9d9;
+  box-shadow:
+    inset 0 -4px 4px 0 rgba(117, 117, 117, 0.39),
+    inset 3px 4px 4px 0 rgba(240, 240, 239, 0.78);
+  filter:
+    drop-shadow(0 4px 2px rgba(0, 0, 0, 0.25))
+    drop-shadow(4px 7px 4px rgba(0, 0, 0, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 23px 15px 26px 17px;
+  opacity: 0;
+  transition: opacity var(--t);
+}
+.clock--night .clock__moon-face {
+  opacity: 1;
+}
+
+/* ─── Content slider: clock panel + timer panel ─────────────────── */
+/*
+  The slider sits at z-index 5, covering the same layer as the old .clock__text.
+  It is full-height (145 px) and clips its children.
+  The track is a flex column 290 px tall (2 × 145 px); a translateY
+  transition slides it between the clock panel (Y=0) and timer panel (Y=−145).
+*/
+.clock__content-slider {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;   /* individual interactive children opt back in */
+  border-radius: inherit;
+}
+
+.clock__content-track {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(0);
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.clock--view-timer .clock__content-track {
+  transform: translateY(-145px);
+}
+
+.clock__panel {
+  flex-shrink: 0;
+  width: 100%;
+  height: 145px;
+  position: relative;
+}
+
+/* ─── Text (inside .clock__panel, so inherits panel's 145px height) ── */
+.clock__text {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  pointer-events: auto;
+  transition: left var(--t), width var(--t);
+  /* sunrise default */
+  left: 0;
+  width: 232px;
+}
+.clock--day    .clock__text { left: 0;     width: 232px; }
+.clock--sunset .clock__text { left: 128px; width: 228px; }
+.clock--night  .clock__text { left: 0;     width: 232px; }
+
+.clock__time {
+  color: #fff;
+  font-family: 'Satoshi Variable', sans-serif;
+  font-size: 60px;   /* reduced from 70px — prevents overlap with sun/moon */
+  font-style: normal;
+  font-weight: 700;
+  line-height: 100%;
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.90),
+     20px  20px 50px rgba(230, 230, 230, 0.90);
+  transition: text-shadow var(--t);
+}
+.clock--night .clock__time {
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.20),
+     20px  20px 50px rgba(230, 230, 230, 0.30);
+}
+
+.clock__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.clock__date,
+.clock__day {
+  color: #fff;
+  font-family: 'Satoshi Variable', sans-serif;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 100%;
+  white-space: nowrap;
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.90),
+     20px  20px 50px rgba(230, 230, 230, 0.90);
+  transition: text-shadow var(--t);
+}
+.clock--night .clock__date,
+.clock--night .clock__day {
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.20),
+     20px  20px 50px rgba(230, 230, 230, 0.30);
+}
+
+/* Dot separator — pure CSS */
+.clock__dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* ─── Timer ──────────────────────────────────────────────────────── */
+/*
+  The timer block is vertically centred within the 145 px panel.
+  left: 20px gives breathing room from the pill's rounded left edge
+  (at the vertical centre the pill is full-width, but the text+buttons
+  span ~80 px vertically, so the top of the block sits near y≈32 px
+  where the pill's border-radius clips content starting at x≈12 px).
+  Width is capped at 212 px so it never bleeds into the sun/moon pill.
+*/
+.clock__timer {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 20px;
+  width: 212px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+/* Hidden input — exists only to capture keyboard events reliably in Electron */
+.clock__timer-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+}
+
+/* Plain countdown display (not editing) */
+.clock__timer-display {
+  color: #fff;
+  font-family: 'Satoshi Variable', sans-serif;
+  font-size: 44px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 100%;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.90),
+     20px  20px 50px rgba(230, 230, 230, 0.90);
+}
+.clock--night .clock__timer-display {
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.20),
+     20px  20px 50px rgba(230, 230, 230, 0.30);
+}
+
+/* Segment row shown while editing */
+.clock__timer-segs {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  user-select: none;
+}
+
+.clock__timer-colon {
+  color: #fff;
+  font-family: 'Satoshi Variable', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 100%;
+  opacity: 0.6;
+  margin: 0 1px;
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.90),
+     20px  20px 50px rgba(230, 230, 230, 0.90);
+}
+
+.clock__timer-seg {
+  color: #fff;
+  font-family: 'Satoshi Variable', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 100%;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0.45;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 1px;
+  transition: opacity 120ms ease, border-color 120ms ease;
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.90),
+     20px  20px 50px rgba(230, 230, 230, 0.90);
+}
+
+/* Active segment: full brightness + underline cursor */
+.clock__timer-seg--active {
+  opacity: 1;
+  border-bottom-color: rgba(255, 255, 255, 0.85);
+}
+
+.clock--night .clock__timer-seg,
+.clock--night .clock__timer-colon {
+  text-shadow:
+    -20px -20px 40px rgba(193, 193, 193, 0.20),
+     20px  20px 50px rgba(230, 230, 230, 0.30);
+}
+
+.clock__timer-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.clock__timer-btn {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 200ms ease, transform 150ms ease;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.clock__timer-btn:hover  { background: rgba(255, 255, 255, 0.28); transform: scale(1.1); }
+.clock__timer-btn:active { transform: scale(0.93); }
+
+/* Reset-to-zero button: Figma inset shadows + drop-shadow filter */
+.clock__timer-btn--reset-zero {
+  box-shadow:
+     1px  1px 2px 0 rgba(255, 255, 255, 0.30) inset,
+    -1px -1px 2px 0 rgba(233, 233, 233, 0.50) inset;
+  filter:
+    drop-shadow( 4px  4px 10px rgba(230, 230, 230, 0.90))
+    drop-shadow(-4px -4px  8px rgba(193, 193, 193, 0.90));
+}
+.clock__timer-btn--reset-zero:hover {
+  filter:
+    drop-shadow( 4px  4px 12px rgba(230, 230, 230, 1.00))
+    drop-shadow(-4px -4px 10px rgba(193, 193, 193, 1.00));
+}
+
+/* ─── Inset shadow overlay — highest z-index, renders over all content */
+/*
+  Inset part: renders visually inside the pill over all children.
+  Outer part: cannot render from inside overflow:hidden, so outer shadows
+  are on .clock directly above.
+*/
+.clock__inset-shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 -1px 13px 0 rgba(0, 0, 0, 0.25),
+    inset 0  7px  9px 0 rgba(0, 0, 0, 0.25);
+}

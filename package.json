@@ -1,0 +1,46 @@
+{
+  "name": "bloom",
+  "version": "1.0.0",
+  "description": "Bloom — skeuomorphic macOS floating clock and timer widget",
+  "author": "Atharva Kulkarni",
+  "license": "SEE LICENSE IN TERMS_OF_USE.md",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "env -u ELECTRON_RUN_AS_NODE electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "dist": "npm run build && electron-builder --mac",
+    "download-assets": "node scripts/download-assets.mjs"
+  },
+  "build": {
+    "appId": "com.bloom.app",
+    "productName": "Bloom",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^42.4.1",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^5.4.11"
+  }
+}

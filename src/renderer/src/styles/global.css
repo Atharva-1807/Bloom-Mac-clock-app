@@ -1,0 +1,40 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@font-face {
+  font-family: 'Satoshi Variable';
+  src: url('../../assets/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+body {
+  font-family: 'Satoshi Variable', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  /* 10 px transparent padding lets outer box-shadow bleed outside the
+     clock rect without being clipped by the window edge. The window is
+     expanded by 2×10 px in both axes to match (see src/main/index.ts). */
+  padding: 10px;
+  overflow: hidden;
+}
+
+.app-shell {
+  width: 369px;
+  height: 145px;
+  -webkit-app-region: drag;
+}
