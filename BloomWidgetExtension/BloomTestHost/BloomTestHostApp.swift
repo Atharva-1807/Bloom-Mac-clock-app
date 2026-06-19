@@ -19,7 +19,7 @@ struct ContentView: View {
             Text("Bloom Widget Test Host")
                 .font(.title2.bold())
 
-            Text("The BloomWidget extension is now registered on this Mac.\nRight-click your desktop → Edit Widgets → search "Bloom".")
+            Text("The BloomWidget extension is now registered on this Mac.\nRight-click your desktop → Edit Widgets → search \"Bloom\".")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 340)
