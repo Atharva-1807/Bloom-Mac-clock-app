@@ -1,6 +1,6 @@
 {
   "name": "bloom",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Bloom — skeuomorphic macOS floating clock and timer widget",
   "author": "Atharva Kulkarni",
   "license": "SEE LICENSE IN TERMS_OF_USE.md",
@@ -11,17 +11,46 @@
     "preview": "env -u ELECTRON_RUN_AS_NODE electron-vite preview",
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "dist": "npm run build && electron-builder --mac",
+    "dist:mas": "npm run build && electron-builder --mac mas",
     "download-assets": "node scripts/download-assets.mjs"
   },
   "build": {
     "appId": "com.bloom.app",
     "productName": "Bloom",
+    "afterPack": "scripts/embed-widget.mjs",
     "mac": {
       "category": "public.app-category.utilities",
-      "target": [
-        "dmg",
-        "zip"
-      ]
+      "target": ["dmg", "zip"],
+      "icon": "build/icon.png",
+      "extendInfo": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "com.bloom.app",
+            "CFBundleURLSchemes": ["bloom"]
+          }
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
+    },
+    "mas": {
+      "category": "public.app-category.utilities",
+      "icon": "build/icon.png",
+      "entitlements": "build/entitlements.mas.plist",
+      "entitlementsInherit": "build/entitlements.mas.inherit.plist",
+      "hardenedRuntime": false,
+      "extendInfo": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "com.bloom.app",
+            "CFBundleURLSchemes": ["bloom"]
+          }
+        ],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
     },
     "files": [
       "out/**/*",

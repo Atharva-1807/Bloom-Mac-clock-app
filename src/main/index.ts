@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 import { join } from 'path'
 
 let mainWindow: BrowserWindow | null = null
@@ -37,7 +37,31 @@ function createWindow(): void {
   })
 }
 
+// Register bloom:// so the WidgetKit extension can open the app on tap
+app.setAsDefaultProtocolClient('bloom')
+app.on('open-url', (event, _url) => {
+  event.preventDefault()
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.show()
+    mainWindow.focus()
+  }
+})
+
 app.whenReady().then(() => {
+  // Minimal menu bar — required by Apple HIG and for MAS review
+  const menu = Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        { label: 'About Bloom', role: 'about' },
+        { type: 'separator' },
+        { label: 'Quit Bloom', accelerator: 'Cmd+Q', role: 'quit' }
+      ]
+    }
+  ])
+  Menu.setApplicationMenu(menu)
+
   createWindow()
 
   app.on('activate', () => {
