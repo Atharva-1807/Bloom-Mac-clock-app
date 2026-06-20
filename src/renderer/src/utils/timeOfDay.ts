@@ -1,5 +1,22 @@
 export type ClockState = 'sunrise' | 'day' | 'sunset' | 'night'
 
+export type WeatherState = 'clear' | 'cloudy' | 'rain' | 'thunderstorm'
+
+/**
+ * Maps WMO weather interpretation codes (used by Open-Meteo) to our four states.
+ * https://open-meteo.com/en/docs#weathervariables
+ *   0–1   → clear
+ *   2–3, 45, 48 → cloudy
+ *   51–67, 80–82 → rain
+ *   95–99 → thunderstorm
+ */
+export function getWeatherState(wmoCode: number): WeatherState {
+  if (wmoCode <= 1) return 'clear'
+  if (wmoCode <= 48) return 'cloudy'
+  if (wmoCode <= 82) return 'rain'
+  return 'thunderstorm'
+}
+
 export function getClockState(date: Date): ClockState {
   const hour = date.getHours()
   const minute = date.getMinutes()

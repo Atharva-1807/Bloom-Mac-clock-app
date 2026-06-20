@@ -1,11 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { ClockState, formatDate, formatDay, formatTime, getClockState } from './utils/timeOfDay'
+import { ClockState, WeatherState, formatDate, formatDay, formatTime, getClockState, getWeatherState } from './utils/timeOfDay'
 import './Clock.css'
 
 type ViewMode  = 'clock' | 'timer'
 type EditSeg   = 'h' | 'm' | 's'
 
 const ALL_STATES: ClockState[] = ['sunrise', 'day', 'sunset', 'night']
+
+// Rain drop positions [left, top] in px, from Figma (design 581:840)
+const RAIN_DROPS: [number, number][] = [
+  [283.07, 49], [252, 39], [220.93, 49],
+  [267, 91],    [313.07, 114], [234, 118],
+  [321, 49],    [358.93, 49], [300, 64],
+  [241.07, 79], [52, 79],    [54, 15],
+  [89, 5],      [124, -5],   [182.14, 94],
+  [123.22, 109],[64.29, 124],
+]
 const SEG_MAX: Record<EditSeg, number> = { h: 99, m: 59, s: 59 }
 const SEG_NEXT: Record<EditSeg, EditSeg | null> = { h: 'm', m: 's', s: null }
 const SEG_PREV: Record<EditSeg, EditSeg | null> = { h: null, m: 'h', s: 'm' }
@@ -22,6 +32,9 @@ function formatTimer(ms: number): string {
 export default function Clock(): JSX.Element {
   const [now, setNow] = useState(() => new Date())
   const state = getClockState(now)
+
+  // ── Weather state ──────────────────────────────────────────────────
+  const [weatherState, setWeatherState] = useState<WeatherState>('clear')
 
   // ── View toggle ────────────────────────────────────────────────────
   const [view, setView] = useState<ViewMode>('clock')
@@ -56,6 +69,34 @@ export default function Clock(): JSX.Element {
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(id)
+  }, [])
+
+  // ── Weather: fetch location by IP → Open-Meteo, poll every 30 min ────
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchWeather(): Promise<void> {
+      try {
+        // Step 1 — city-level location via IP (no permission required)
+        const locRes = await fetch('https://ip-api.com/json/?fields=lat,lon,status')
+        const loc = await locRes.json() as { status: string; lat: number; lon: number }
+        if (!loc || loc.status !== 'success') return
+
+        // Step 2 — current weather code from Open-Meteo
+        const wxRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=weather_code&forecast_days=1`
+        )
+        const wx = await wxRes.json() as { current?: { weather_code?: number } }
+        const wmoCode = wx?.current?.weather_code ?? 0
+        if (!cancelled) setWeatherState(getWeatherState(wmoCode))
+      } catch {
+        // Network unavailable — keep current state
+      }
+    }
+
+    fetchWeather()
+    const poll = setInterval(fetchWeather, 30 * 60 * 1000)
+    return () => { cancelled = true; clearInterval(poll) }
   }, [])
 
   // ── Double-click to quit ───────────────────────────────────────────
@@ -203,13 +244,30 @@ export default function Clock(): JSX.Element {
   const isEditing = editSeg !== null
 
   return (
-    <div className={`clock clock--${state} clock--view-${view}`}>
+      <div className={`clock clock--${state} clock--view-${view} clock--weather-${weatherState}`}>
       {ALL_STATES.map((s) => (
         <div key={s} className={`clock__bg clock__bg--${s}`} style={{ opacity: state === s ? 1 : 0 }} aria-hidden />
       ))}
+      {/* Weather background — sits above time-of-day backgrounds */}
+      <div className="clock__bg clock__bg--rain" style={{ opacity: weatherState === 'rain' ? 1 : 0 }} aria-hidden />
 
+      {/* Day/sunset/night clouds — hidden when raining via CSS */}
       <div className="clock__cloud clock__cloud--back" aria-hidden><CloudBackSVG /></div>
       <div className="clock__cloud clock__cloud--front" aria-hidden><CloudFrontSVG /></div>
+
+      {/* Rain clouds — front at top, back at bottom painted above front */}
+      <div className="clock__rain-cloud clock__rain-cloud--front" aria-hidden><CloudFrontSVG /></div>
+      <div className="clock__rain-cloud clock__rain-cloud--back" aria-hidden><CloudBackSVG /></div>
+
+      {/* Rain drops */}
+      <div className="clock__rain-drops" aria-hidden>
+        {RAIN_DROPS.map(([left, top], i) => (
+          <div key={i} className="clock__rain-drop" style={{ left, top }}>
+            <WaterDropSVG />
+          </div>
+        ))}
+      </div>
+
       <div className="clock__stars" aria-hidden><StarsSVG /></div>
 
       <div className="clock__celestial-group" aria-hidden>
@@ -219,7 +277,7 @@ export default function Clock(): JSX.Element {
           <div className="clock__ray clock__ray--1" />
         </div>
         <div className="clock__pill">
-          <div className="clock__sun-face"><SunSVG /></div>
+          <div className="clock__sun-face"><SunSVG state={state} /></div>
           <div className="clock__moon-face"><MoonSpotsSVG /></div>
         </div>
       </div>
@@ -328,7 +386,7 @@ export default function Clock(): JSX.Element {
   )
 }
 
-function SunSVG(): JSX.Element {
+function SunSVG({ state }: { state: ClockState }): JSX.Element {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -339,6 +397,11 @@ function SunSVG(): JSX.Element {
       style={{ display: 'block', width: '100%', height: '100%' }}
     >
       <defs>
+        {/* Sunset-specific gradient: dark orange at top, bright yellow at bottom */}
+        <linearGradient id="sun-sunset-grad" x1="50" y1="0" x2="50" y2="100" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#F9981A" />
+          <stop offset="100%" stopColor="#FBC337" />
+        </linearGradient>
         <filter
           id="sun-fx"
           x="-4"
@@ -405,7 +468,7 @@ function SunSVG(): JSX.Element {
         </filter>
       </defs>
       <g filter="url(#sun-fx)">
-        <circle cx="50" cy="50" r="50" fill="#FFC943" />
+        <circle cx="50" cy="50" r="50" fill={state === 'sunset' ? 'url(#sun-sunset-grad)' : '#FFC943'} />
       </g>
     </svg>
   )
@@ -643,6 +706,22 @@ function StarsSVG(): JSX.Element {
       <path
         d="M24.2252 16.0493L26.6546 17.9034C26.9511 18.1296 27.0993 18.2427 27.2649 18.3011C27.4114 18.3526 27.5672 18.3729 27.7221 18.3606C27.897 18.3466 28.0693 18.2753 28.4138 18.1325L31.2371 16.9624L29.383 19.3918C29.1567 19.6883 29.0436 19.8365 28.9853 20.0021C28.9337 20.1487 28.9134 20.3044 28.9258 20.4593C28.9397 20.6342 29.0111 20.8065 29.1539 21.151L30.3239 23.9743L27.8945 22.1202C27.598 21.8939 27.4498 21.7808 27.2842 21.7225C27.1377 21.6709 26.9819 21.6506 26.8271 21.663C26.6521 21.6769 26.4798 21.7483 26.1353 21.8911L23.3121 23.0611L25.1661 20.6317C25.3924 20.3353 25.5055 20.187 25.5638 20.0214C25.6154 19.8749 25.6357 19.7192 25.6234 19.5643C25.6094 19.3893 25.538 19.217 25.3952 18.8725L24.2252 16.0493Z"
         fill="white"
+      />
+    </svg>
+  )
+}
+
+function WaterDropSVG(): JSX.Element {
+  return (
+    <svg width="8" height="11" viewBox="0 0 8 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M4 0C4 0 0.5 4.2 0.5 6.8C0.5 8.95 2.02 11 4 11C5.98 11 7.5 8.95 7.5 6.8C7.5 4.2 4 0 4 0Z"
+        fill="rgba(200,225,245,0.88)"
+      />
+      {/* Inner highlight shimmer */}
+      <path
+        d="M2.5 3.5C2.5 3.5 1.5 5.5 1.8 7C1.85 7.3 2.1 7.5 2.3 7.4C2.5 7.3 2.55 7.05 2.5 6.75C2.3 5.6 3 4 3 4L2.5 3.5Z"
+        fill="rgba(255,255,255,0.5)"
       />
     </svg>
   )

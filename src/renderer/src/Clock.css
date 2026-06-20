@@ -26,6 +26,80 @@
 .clock__bg--day     { background: linear-gradient(180deg, #43aaff 0%, #4e9ad9 100%); }
 .clock__bg--sunset  { background: linear-gradient(0deg, #ffca43 0.07%, #eb9c35 99.93%); }
 .clock__bg--night   { background: #011223; }
+/* Weather overlay — sits above time-of-day, fades in on weather state change */
+.clock__bg--rain    { background: linear-gradient(180deg, #494949 0%, #788A99 68%, #A6CAE9 100%); }
+
+/* ─── Rain clouds — larger, overflow top of pill ────────────────── */
+/*
+  These completely replace the time-of-day clouds when raining.
+  Sizes and positions derived from Figma outer-container flex-centering:
+    element_left = outer_left + (outer_w − cloud_w) / 2
+    element_top  = outer_top  + (outer_h − cloud_h) / 2
+  Front: outer 484.824×404.418 at -50.73,-132.86 → cloud 428.829×326.088
+  Back:  outer 489.415×415.447 at -46.73,-135.73  → cloud 431.346×336.831
+*/
+.clock__rain-cloud {
+  position: absolute;
+  pointer-events: none;
+  transform: rotate(11.4deg);
+  transform-origin: center;
+  opacity: 0;
+  transition: opacity var(--t);
+  z-index: 1;
+}
+.clock--weather-rain .clock__rain-cloud { opacity: 1; }
+
+/* Front cloud — bumps overflow top of the pill */
+.clock__rain-cloud--front {
+  width: 428.829px;
+  height: 326.088px;
+  left: -22.73px;
+  top: -130px;
+  z-index: 1;
+}
+/* Back cloud — positioned low so its bumps peek up from the pill bottom, painted above front */
+.clock__rain-cloud--back {
+  width: 431.346px;
+  height: 336.831px;
+  left: -17.70px;
+  top: 88px;
+  z-index: 2;
+}
+
+/* ─── Rain drops ─────────────────────────────────────────────────── */
+.clock__rain-drops {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--t);
+  z-index: 2;
+}
+.clock--weather-rain .clock__rain-drops { opacity: 1; }
+
+.clock__rain-drop {
+  position: absolute;
+  width: 10.928px;
+  height: 10.928px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(30deg);
+  transition: transform var(--t-hover);
+}
+/* Hover: all drops fall 9px */
+.clock:hover .clock__rain-drops { transform: translateY(9px); }
+
+/* ─── Rain state overrides ────────────────────────────────────────── */
+/* Hide the day/sunset/night clouds and celestial group behind rain overlay */
+.clock--weather-rain .clock__cloud         { opacity: 0; }
+.clock--weather-rain .clock__celestial-group { opacity: 0; }
+/* Slightly muted text shadow in rain */
+.clock--weather-rain .clock__time {
+  text-shadow:
+    -20px -20px 40px rgba(130, 130, 130, 0.90),
+     20px  20px 50px rgba(164, 164, 164, 0.90);
+}
 
 /* ─── Cloud layers ─────────────────────────────────────────────── */
 /*
@@ -44,7 +118,7 @@
   position: absolute;
   pointer-events: none;
   z-index: 1;
-  transition: left var(--t), top var(--t);
+  transition: left var(--t), top var(--t), opacity var(--t);
 }
 
 /* Front cloud — 375.781 × 198.277, rotated 11.4° */
@@ -101,10 +175,10 @@
   z-index: 3;
   left: 235px;
   top: 95px;           /* default = sunrise, sun partially below */
-  transition: left var(--t), top var(--t), transform var(--t-hover);
+  transition: left var(--t), top var(--t), transform var(--t-hover), opacity var(--t);
 }
 .clock--day    .clock__celestial-group { left: 235px; top: 25px; }
-.clock--sunset .clock__celestial-group { left: 19px;  top: 25px; }
+.clock--sunset .clock__celestial-group { left: 19px;  top: 25px; z-index: 0; }
 .clock--night  .clock__celestial-group { left: 235px; top: 17px; }
 /* Hover: sun/moon + rings lift */
 .clock:hover .clock__celestial-group {
@@ -346,7 +420,10 @@
   align-items: center;
   gap: 8px;
   pointer-events: auto;
+  transition: left var(--t), width var(--t);
 }
+/* Sunset: sun is on the left, so push timer to the right — mirrors .clock__text */
+.clock--sunset .clock__timer { left: 128px; width: 228px; }
 
 /* Hidden input — exists only to capture keyboard events reliably in Electron */
 .clock__timer-hidden-input {

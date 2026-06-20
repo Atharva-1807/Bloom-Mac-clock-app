@@ -78,7 +78,6 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on('quit-app', (event) => {
-  // Only honour quit requests from our own renderer window
   if (mainWindow && event.sender === mainWindow.webContents) {
     app.quit()
   }

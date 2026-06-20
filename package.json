@@ -20,13 +20,18 @@
     "afterPack": "scripts/embed-widget.mjs",
     "mac": {
       "category": "public.app-category.utilities",
-      "target": ["dmg", "zip"],
+      "target": [
+        "dmg",
+        "zip"
+      ],
       "icon": "build/icon.png",
       "extendInfo": {
         "CFBundleURLTypes": [
           {
             "CFBundleURLName": "com.bloom.app",
-            "CFBundleURLSchemes": ["bloom"]
+            "CFBundleURLSchemes": [
+              "bloom"
+            ]
           }
         ],
         "NSAppTransportSecurity": {
@@ -44,7 +49,9 @@
         "CFBundleURLTypes": [
           {
             "CFBundleURLName": "com.bloom.app",
-            "CFBundleURLSchemes": ["bloom"]
+            "CFBundleURLSchemes": [
+              "bloom"
+            ]
           }
         ],
         "NSAppTransportSecurity": {
@@ -64,7 +71,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
-    "electron": "^42.4.1",
+    "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "react": "^18.3.1",
