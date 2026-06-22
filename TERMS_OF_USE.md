@@ -1,4 +1,4 @@
-# Terms of Use — Bloom
+# Terms of Use — Daylight
 
 **Last updated:** June 2026
 
@@ -6,7 +6,7 @@
 
 ## 1. Acceptance
 
-By downloading, installing, or using Bloom ("the App"), you agree to these Terms of Use. If you do not agree, do not install or use the App.
+By downloading, installing, or using Daylight ("the App"), you agree to these Terms of Use. If you do not agree, do not install or use the App.
 
 ---
 
@@ -61,12 +61,12 @@ To the maximum extent permitted by law, the author is **not liable** for any dir
 
 ## 6. Privacy and Location Data
 
-Bloom requests access to your device's location solely to fetch current local weather conditions from [Open-Meteo](https://open-meteo.com) — a free, open-source weather API. The following applies:
+Daylight requests access to your device's location solely to fetch current local weather conditions from [Open-Meteo](https://open-meteo.com) — a free, open-source weather API. The following applies:
 
 - **What is sent:** Your approximate GPS coordinates (latitude and longitude) are transmitted to `api.open-meteo.com` to retrieve a weather code for your location.
-- **What is not collected:** Bloom does not collect, store, log, or share your location with any party other than Open-Meteo's public API.
+- **What is not collected:** Daylight does not collect, store, log, or share your location with any party other than Open-Meteo's public API.
 - **Retention:** Coordinates are held in memory only for the duration of the weather fetch. They are never written to disk and are discarded when the App quits.
-- **Your control:** You may deny the macOS location permission when prompted. If denied, Bloom continues to function normally using a default "clear" weather state, and no location data is ever sent.
+- **Your control:** You may deny the macOS location permission when prompted. If denied, Daylight continues to function normally using a default "clear" weather state, and no location data is ever sent.
 - **Third-party privacy:** Open-Meteo's privacy policy applies to any data they receive. See [open-meteo.com](https://open-meteo.com).
 
 For full details, see our [Privacy Policy](PRIVACY_POLICY.md).
@@ -91,4 +91,4 @@ For questions, permissions, or bug reports, open an issue on the project's GitHu
 
 ---
 
-*Bloom is a personal project crafted with care. Enjoy it.*
+*Daylight is a personal project crafted with care. Enjoy it.*

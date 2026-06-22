@@ -44,7 +44,7 @@ function createWindow(): void {
 }
 
 // Register bloom:// so the WidgetKit extension can open the app on tap
-app.setAsDefaultProtocolClient('bloom')
+app.setAsDefaultProtocolClient('daylight')
 app.on('open-url', (event, _url) => {
   event.preventDefault()
   if (mainWindow) {
@@ -60,9 +60,9 @@ app.whenReady().then(() => {
     {
       label: app.name,
       submenu: [
-        { label: 'About Bloom', role: 'about' },
+        { label: 'About Daylight', role: 'about' },
         { type: 'separator' },
-        { label: 'Quit Bloom', accelerator: 'Cmd+Q', role: 'quit' }
+        { label: 'Quit Daylight', accelerator: 'Cmd+Q', role: 'quit' }
       ]
     }
   ])

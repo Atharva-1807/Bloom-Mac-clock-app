@@ -1,4 +1,4 @@
-# Bloom
+# Daylight
 
 A skeuomorphic macOS desktop clock widget that lives on your desktop and shifts through four living states — **sunrise**, **day**, **sunset**, and **night** — in sync with the actual time. Designed in Figma, built with Electron + React.
 
@@ -12,6 +12,7 @@ A skeuomorphic macOS desktop clock widget that lives on your desktop and shifts 
 - Skeuomorphic design: sun, moon, stars, and clouds rendered in pure CSS + SVG
 - Built-in countdown timer — swipe up with two fingers to reveal it
 - Segment-based timer input (click HH, MM, or SS to edit each independently)
+- Live weather integration — UI adapts to rain, cloud cover, and storms
 - Satoshi Variable typeface for a clean, modern feel
 
 ---
@@ -64,8 +65,8 @@ A skeuomorphic macOS desktop clock widget that lives on your desktop and shifts 
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/bloom.git
-cd bloom
+git clone https://github.com/YOUR_USERNAME/daylight.git
+cd daylight
 
 # 2. Install dependencies
 npm install
@@ -96,9 +97,9 @@ Output files land in the `release/` directory:
 ```
 release/
   mac-arm64/
-    Bloom.app                    ← drag-to-Applications bundle
-    Bloom-1.0.0-arm64.dmg        ← installer disk image
-    Bloom-1.0.0-arm64-mac.zip    ← direct download archive
+    Daylight.app                    ← drag-to-Applications bundle
+    Daylight-1.2.0-arm64.dmg        ← installer disk image
+    Daylight-1.2.0-arm64-mac.zip    ← direct download archive
 ```
 
 ---
@@ -107,7 +108,7 @@ release/
 
 Until the app is code-signed with an Apple Developer ID, macOS will show a security prompt on first launch. To open it:
 
-1. Right-click `Bloom.app` → **Open**
+1. Right-click `Daylight.app` → **Open**
 2. Click **Open** in the dialog
 
 Or go to **System Settings → Privacy & Security → Open Anyway** after the first blocked attempt.
