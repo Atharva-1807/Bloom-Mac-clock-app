@@ -7,6 +7,16 @@ type EditSeg   = 'h' | 'm' | 's'
 
 const ALL_STATES: ClockState[] = ['sunrise', 'day', 'sunset', 'night']
 
+// Snap breakpoints — window widths at 50 / 75 / 100 / 150 / 200 %
+const SNAP_WIDTHS = [195, 292, 389, 584, 778]
+const ASPECT = 389 / 165
+
+function snapWidth(w: number): number {
+  return SNAP_WIDTHS.reduce((best, bw) =>
+    Math.abs(bw - w) < Math.abs(best - w) ? bw : best
+  )
+}
+
 // Rain drop positions [left, top] in px, from Figma (design 581:840)
 const RAIN_DROPS: [number, number][] = [
   [283.07, 49], [252, 39], [220.93, 49],
@@ -243,6 +253,32 @@ export default function Clock(): JSX.Element {
   const nodrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
   const isEditing = editSeg !== null
 
+  // ── Resize grip drag ───────────────────────────────────────────────
+  const onResizeGripDown = (e: React.MouseEvent): void => {
+    e.preventDefault()
+    e.stopPropagation()
+    const startX   = e.screenX
+    const startW   = window.outerWidth
+
+    const onMove = (ev: MouseEvent): void => {
+      const newW = Math.max(195, Math.min(778, startW + (ev.screenX - startX)))
+      const newH = Math.round(newW / ASPECT)
+      window.electronAPI?.resizeWindow?.(newW, newH)
+    }
+
+    const onUp = (ev: MouseEvent): void => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup',   onUp)
+      // Snap to nearest breakpoint
+      const finalW = Math.max(195, Math.min(778, startW + (ev.screenX - startX)))
+      const snapped = snapWidth(finalW)
+      window.electronAPI?.resizeWindow?.(snapped, Math.round(snapped / ASPECT))
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup',   onUp)
+  }
+
   return (
       <div className={`clock clock--${state} clock--view-${view} clock--weather-${weatherState}`}>
       {ALL_STATES.map((s) => (
@@ -379,6 +415,16 @@ export default function Clock(): JSX.Element {
           </div>
 
         </div>
+      </div>
+
+      {/* Resize grip — bottom-right of pill, drag to scale */}
+      <div
+        className="clock__resize-grip"
+        onMouseDown={onResizeGripDown}
+        style={nodrag}
+        title="Drag to resize"
+      >
+        <ResizeGripSVG />
       </div>
 
       <div className="clock__inset-shadow" aria-hidden />
@@ -723,6 +769,19 @@ function WaterDropSVG(): JSX.Element {
         d="M2.5 3.5C2.5 3.5 1.5 5.5 1.8 7C1.85 7.3 2.1 7.5 2.3 7.4C2.5 7.3 2.55 7.05 2.5 6.75C2.3 5.6 3 4 3 4L2.5 3.5Z"
         fill="rgba(255,255,255,0.5)"
       />
+    </svg>
+  )
+}
+
+function ResizeGripSVG(): JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="10" cy="10" r="1.5" fill="white" opacity="0.8" />
+      <circle cx="6"  cy="10" r="1.5" fill="white" opacity="0.5" />
+      <circle cx="10" cy="6"  r="1.5" fill="white" opacity="0.5" />
+      <circle cx="2"  cy="10" r="1.5" fill="white" opacity="0.25" />
+      <circle cx="6"  cy="6"  r="1.5" fill="white" opacity="0.25" />
+      <circle cx="10" cy="2"  r="1.5" fill="white" opacity="0.25" />
     </svg>
   )
 }

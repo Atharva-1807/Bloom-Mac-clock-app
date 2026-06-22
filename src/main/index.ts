@@ -11,7 +11,11 @@ function createWindow(): void {
     transparent: true,
     alwaysOnTop: true,
     hasShadow: false,
-    resizable: false,
+    resizable: true,
+    minWidth: 195,   // 50 % scale
+    minHeight: 83,
+    maxWidth: 778,   // 200 % scale
+    maxHeight: 330,
     skipTaskbar: false,
     titleBarStyle: 'hidden',
     backgroundColor: '#00000000',
@@ -25,6 +29,8 @@ function createWindow(): void {
 
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
   mainWindow.setAlwaysOnTop(true, 'floating')
+  // Lock width:height ratio — user can drag to any size but it stays proportional
+  mainWindow.setAspectRatio(389 / 165)
 
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
@@ -81,4 +87,8 @@ ipcMain.on('quit-app', (event) => {
   if (mainWindow && event.sender === mainWindow.webContents) {
     app.quit()
   }
+})
+
+ipcMain.on('resize-window', (_event, width: number, height: number) => {
+  mainWindow?.setSize(Math.round(width), Math.round(height))
 })

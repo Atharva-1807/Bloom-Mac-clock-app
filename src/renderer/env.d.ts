@@ -1,5 +1,6 @@
 export interface ElectronAPI {
   quit: () => void
+  resizeWindow: (width: number, height: number) => void
 }
 
 declare global {

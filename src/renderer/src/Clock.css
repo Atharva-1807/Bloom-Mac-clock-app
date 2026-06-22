@@ -557,6 +557,24 @@
   Outer part: cannot render from inside overflow:hidden, so outer shadows
   are on .clock directly above.
 */
+/* ─── Resize grip ───────────────────────────────────────────────────── */
+.clock__resize-grip {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 11; /* above inset shadow */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.clock:hover .clock__resize-grip { opacity: 1; }
+
+/* ─── Inset shadow overlay ─────────────────────────────────────────── */
 .clock__inset-shadow {
   position: absolute;
   inset: 0;
